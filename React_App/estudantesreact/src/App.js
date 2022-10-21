@@ -14,6 +14,8 @@ function App() {
 
   const [modalIncluir, setModalIncluir] = useState(false);
 
+  const [modalEditar, setModalEditar] = useState(false);
+
   const [estudanteSelecionado, setEstudanteSelecionado] = useState({
     id: '',
     nome: '',
@@ -21,8 +23,17 @@ function App() {
     idade: ''
   })
 
+  const selecionarEstudante = (estudante, opcao) => {
+    setEstudanteSelecionado(estudante);
+    (opcao === 'Editar') && abrirFecharModalEditar()
+  }
+
   const abrirFecharModalIncluir = () => {
     setModalIncluir(!modalIncluir);
+  }
+
+  const abrirFecharModalEditar = () => {
+    setModalEditar(!modalEditar);
   }
 
   const handleChange = e => {
@@ -47,6 +58,24 @@ function App() {
     await axios.post(baseUrl, estudanteSelecionado).then(response => {
       setData(data.concat(response.data));
       abrirFecharModalIncluir();
+    }).catch(error => {
+      console.log(error);
+    })
+  }
+
+  const pedidoPut = async () => {
+    estudanteSelecionado.idade = parseInt(estudanteSelecionado.idade);
+    await axios.put(baseUrl + " / " + estudanteSelecionado.id, estudanteSelecionado).then(response => {
+      var resposta = response.data;
+      var dadosAuxiliar = data;
+      dadosAuxiliar.map(estudante => {
+        if (estudante.id === estudanteSelecionado.id) {
+          estudante.nome = resposta.nome;
+          estudante.email = resposta.email;
+          estudante.idade = resposta.idade;
+        }
+      });
+      abrirFecharModalEditar();
     }).catch(error => {
       console.log(error);
     })
@@ -82,8 +111,8 @@ function App() {
               <td>{estudante.email}</td>
               <td>{estudante.idade}</td>
               <td>
-                <button className="btn btn-primary">Editar</button> {" "}
-                <button className="btn btn-danger">Excluir</button>
+                <button className="btn btn-primary" onClick={() => selecionarEstudante(estudante, 'Editar')}>Editar</button> {" "}
+                <button className="btn btn-danger" onClick={() => selecionarEstudante(estudante, 'Excluir')}>Excluir</button>
               </td>
             </tr>
           ))}
@@ -112,6 +141,34 @@ function App() {
         <ModalFooter>
           <button className='btn btn-primary' onClick={() => pedidoPost()} >Incluir</button> {" "}
           <button className='btn btn-danger' onClick={() => abrirFecharModalIncluir()} >Cancelar</button>
+        </ModalFooter>
+      </Modal>
+
+      <Modal isOpen={modalEditar} >
+        <ModalHeader>Editar Estudante</ModalHeader>
+        <ModalBody>
+          <div className='form-group'>
+            <label>ID: </label>
+            <br />
+            <input type='text' className='form-control' readOnly value={estudanteSelecionado && estudanteSelecionado.id} />
+            <br />
+            <label>Nome: </label>
+            <br />
+            <input type='text' className='form-control' name='nome' onChange={handleChange} value={estudanteSelecionado && estudanteSelecionado.nome} />
+            <br />
+            <label>Email: </label>
+            <br />
+            <input type='text' className='form-control' name='email' onChange={handleChange} value={estudanteSelecionado && estudanteSelecionado.email} />
+            <br />
+            <label>Idade: </label>
+            <br />
+            <input type='text' className='form-control' name='idade' onChange={handleChange} value={estudanteSelecionado && estudanteSelecionado.idade} />
+            <br />
+          </div>
+        </ModalBody>
+        <ModalFooter>
+          <button className='btn btn-primary' onClick={() => pedidoPut()} >Editar</button> {" "}
+          <button className='btn btn-danger' onClick={() => abrirFecharModalEditar()} >Cancelar</button>
         </ModalFooter>
       </Modal>
     </div>
